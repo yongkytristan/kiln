@@ -1,0 +1,17 @@
+{
+  "slug": "525-website-onboarding-open-decisions-en",
+  "title": "Website onboarding: plan and open decisions for #525 and RFC #549",
+  "framework": "html",
+  "metadata": {
+    "description": "English: website onboarding plan for #525 (Atlas identifiers, new parts, end-to-end flow), open decisions D1, D5, D6, D7, and RFC #549 on marketplace catalogue storage before the app exists.",
+    "tags": [
+      "525",
+      "549",
+      "onboarding",
+      "atlas",
+      "rfc"
+    ]
+  },
+  "revision": "9fc181e6ef05d811",
+  "updated_at": "2026-11-10T07:06:10.033Z"
+}

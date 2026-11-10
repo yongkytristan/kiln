@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Website onboarding: open decisions for #525 and RFC #549</title>
+<style>
+  :root {
+    --bg: #fbfbfa; --fg: #1d2330; --muted: #5d6576; --border: #dfe2e8; --surface: #ffffff;
+    --ok: #13795b; --ok-bg: #e7f6ef; --bad: #b3261e; --bad-bg: #fdecea; --warn: #8a5a00; --warn-bg: #fff4dc;
+    --accent: #2457c5; --accent-bg: #eaf0fc; --code-bg: #f1f3f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #13161c; --fg: #e6e8ee; --muted: #9aa2b2; --border: #2c323d; --surface: #1a1e26;
+      --ok: #5fd0a2; --ok-bg: #12291f; --bad: #ff8a80; --bad-bg: #2d1514; --warn: #f2c066; --warn-bg: #2b2210;
+      --accent: #8fb0ff; --accent-bg: #1a2440; --code-bg: #232833;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 21px; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+  h3 { font-size: 17px; margin: 26px 0 8px; }
+  p { margin: 0 0 12px; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .meta { color: var(--muted); margin-bottom: 28px; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+  pre { background: var(--code-bg); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font-size: 13.5px; line-height: 1.5; margin: 10px 0 14px; }
+  pre code { background: none; padding: 0; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin: 18px 0 8px; }
+  .card { border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: 14px 16px; }
+  .card h3 { margin: 0 0 6px; font-size: 16px; }
+  .card p { font-size: 14.5px; margin: 0; }
+  .card.now { border-left: 5px solid var(--accent); }
+  .card.next { border-left: 5px solid var(--muted); }
+  .pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill.ok { color: var(--ok); background: var(--ok-bg); }
+  .pill.bad { color: var(--bad); background: var(--bad-bg); }
+  .pill.warn { color: var(--warn); background: var(--warn-bg); }
+  .pill.info { color: var(--accent); background: var(--accent-bg); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: 14.5px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 11px; border-bottom: 1px solid var(--border); }
+  th { font-size: 13px; color: var(--muted); font-weight: 600; background: var(--code-bg); }
+  tr:last-child td { border-bottom: 0; }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; }
+  li { margin: 4px 0; }
+  .flow { overflow-x: auto; margin: 10px 0 6px; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 10px; }
+  .flow svg { min-width: 760px; width: 100%; height: auto; }
+  .flow text { fill: var(--fg); font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .flow .lane-title { font-weight: 700; font-size: 14px; }
+  .flow .lane { stroke: var(--border); stroke-width: 2; stroke-dasharray: 4 5; }
+  .flow .msg { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+  .flow .ret { stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 5 4; fill: none; }
+  .flow .head { fill: var(--accent); }
+  .flow .head-ret { fill: var(--muted); }
+  .flow .box { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1; }
+  .flow .note-box { fill: var(--warn-bg); stroke: var(--warn); stroke-width: 1; }
+  .flow .muted { fill: var(--muted); }
+  .note { color: var(--muted); font-size: 14px; }
+  .callout { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+  .decision { border: 1px solid var(--border); border-left: 5px solid var(--warn); background: var(--surface); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+  .decision h3 { margin: 0 0 6px; font-size: 16px; }
+  .decision p:last-child { margin-bottom: 0; }
+  nav.toc { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 12px 16px; margin: 18px 0; font-size: 14.5px; }
+  nav.toc ol { margin: 6px 0 0; columns: 2; column-gap: 28px; }
+  @media (max-width: 640px) { nav.toc ol { columns: 1; } h1 { font-size: 25px; } }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Website onboarding: open decisions for #525 and RFC #549</h1>
+  <p class="note">Status: draft for review with Jonathan. A row is decided only where it says "Decided". Everything else is a proposal or an open question. Public artifact: no secrets, hostnames, IPs, or internal URLs.</p>
+
+  <nav class="toc">
+    <ol>
+      <li><a href="#purpose">1. Purpose and scope</a></li>
+      <li><a href="#ids">2. Atlas identifiers</a></li>
+      <li><a href="#new-parts">3. New parts</a></li>
+      <li><a href="#flow">4. Flow from start to finish</a></li>
+      <li><a href="#d1">5. D1 Remembering imports before the app exists</a></li>
+      <li><a href="#d5-now">6. D5 Current state of MI-1</a></li>
+      <li><a href="#d5">7. D5 Messages, buttons, destinations per state</a></li>
+      <li><a href="#d6">8. D6 Page and product limits</a></li>
+      <li><a href="#d7">9. D7 Atlas credentials</a></li>
+      <li><a href="#asks">10. Decisions needed from Jonathan</a></li>
+      <li><a href="#unverified">11. Unverified items</a></li>
+      <li><a href="#waiting">12. What waits and what proceeds</a></li>
+      <li><a href="#decisions">13. Decision table</a></li>
+      <li><a href="#rfc549">14. RFC #549 Marketplace catalogue before the app exists</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="purpose">1. Purpose and scope</h2>
+  <p>This page covers the website onboarding plan for #525: the Atlas identifiers, the new parts and the end-to-end flow (sections 3 and 4), the open items D1, D5, D6, and D7 (sections 5 to 9), and the RFC question raised by #549 (section 14). It does not repeat D2–D4 or the decided items. The Indonesian version covers the full plan, including D2–D4 and the decided items.</p>
+
+  <h2 id="ids">2. Atlas identifiers</h2>
+  <p>Atlas issues a <code>discovery_id</code> when a check is run first, and an <code>acquisition_id</code> for the import. Arcane creates the <code>submission_id</code> and reuses it for resubmits within 24 hours. Results are read by <code>acquisition_id</code>. The <code>context_id</code> is an HMAC over the user and attempt ID, so it stays stable across polling, retries, and app creation. The attestation value is part of the request identity, so it must also be stored.</p>
+
+  <h2 id="new-parts">3. New parts</h2>
+  <p class="note">Planned, not in the code yet. Indonesian version: §3 "Bagian baru".</p>
+<pre><code>apps/api/app/
+  config.py                          + AtlasSettings (ATLAS__…)
+  services/interfaces/website_acquisition.py   contract Arcane ↔ "website acquisition source"
+  integrations/atlas/
+    token.py      request an Atlas token (client credentials), cached until close to expiry
+    client.py     HTTP calls to Atlas, timeouts, error translation
+    schemas.py    Atlas request/response shapes
+  services/onboarding/
+    link_import.py       import flow: ownership check, context, submission IDs, status → screen
+    website_mapping.py   Atlas result → onboarding proposal + page list (pure, no I/O)
+  routers/onboarding.py  + check / import / proposal routes
+apps/web/src/domains/onboarding/link/   Link/Check/Import/Review screens, polling, draft</code></pre>
+  <p class="note">Marketplace (#549) later adds its own ecommerce client and marketplace mapping. Shared: token, error types, context rules, recovery flow.</p>
+
+  <h2 id="flow">4. Flow from start to finish</h2>
+  <p class="note">Proposed sequence, not implemented. Indonesian version: §4 "Alur dari awal sampai akhir".</p>
+  <div class="flow">
+    <svg viewBox="0 0 980 770" role="img" aria-label="Sequence diagram: browser, Arcane API and Atlas from link check to confirm">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-ret"/></marker>
+      </defs>
+      <rect x="70" y="10" width="160" height="34" rx="8" class="box"/><text x="150" y="32" text-anchor="middle" class="lane-title">Browser</text>
+      <rect x="410" y="10" width="160" height="34" rx="8" class="box"/><text x="490" y="32" text-anchor="middle" class="lane-title">Arcane API</text>
+      <rect x="750" y="10" width="160" height="34" rx="8" class="box"/><text x="830" y="32" text-anchor="middle" class="lane-title">Atlas</text>
+      <line x1="150" y1="44" x2="150" y2="760" class="lane"/>
+      <line x1="490" y1="44" x2="490" y2="760" class="lane"/>
+      <line x1="830" y1="44" x2="830" y2="760" class="lane"/>
+
+      <text x="160" y="72">create submission_id S1, store in draft</text>
+      <path d="M150,96 L488,96" class="msg" marker-end="url(#ah)"/><text x="160" y="90">POST …/attempts/{A}/link/check {url, S1}</text>
+      <path d="M490,128 L828,128" class="msg" marker-end="url(#ah)"/><text x="500" y="122">POST /api/v1/discoveries {context_id, S1, url}</text>
+      <path d="M830,156 L492,156" class="ret" marker-end="url(#ar)"/><text x="580" y="150" class="muted">discovery_id, state</text>
+
+      <rect x="60" y="172" width="870" height="78" rx="8" fill="none" stroke="var(--border)"/><text x="72" y="190" class="muted">repeat until done</text>
+      <path d="M150,212 L488,212" class="msg" marker-end="url(#ah)"/><text x="160" y="206">GET …/link/checks/{discovery_id}</text>
+      <path d="M490,238 L828,238" class="msg" marker-end="url(#ah)"/><text x="500" y="232">GET /api/v1/discoveries/{id}?context_id</text>
+
+      <rect x="60" y="266" width="440" height="36" rx="8" class="note-box"/><text x="74" y="289">"Is this your website?" → user picks "Yes, this is my website"</text>
+
+      <path d="M150,336 L488,336" class="msg" marker-end="url(#ah)"/><text x="160" y="330">POST …/link/imports {discovery_id, S2, owned}</text>
+      <path d="M490,368 L828,368" class="msg" marker-end="url(#ah)"/><text x="500" y="362">POST /api/v1/acquisitions</text>
+
+      <rect x="60" y="388" width="870" height="78" rx="8" fill="none" stroke="var(--border)"/><text x="72" y="406" class="muted">repeat until done (per page: read / reading / waiting)</text>
+      <path d="M150,428 L488,428" class="msg" marker-end="url(#ah)"/><text x="160" y="422">GET …/link/imports/{acquisition_id}</text>
+      <path d="M490,454 L828,454" class="msg" marker-end="url(#ah)"/><text x="500" y="448">GET /api/v1/acquisitions/{id}?context_id</text>
+
+      <path d="M150,500 L488,500" class="msg" marker-end="url(#ah)"/><text x="160" y="494">GET …/imports/{acquisition_id}/proposal</text>
+      <path d="M490,528 L828,528" class="msg" marker-end="url(#ah)"/><text x="500" y="522">GET …/result?context_id</text>
+      <path d="M488,560 L152,560" class="ret" marker-end="url(#ar)"/><text x="170" y="554" class="muted">onboarding proposal + page list</text>
+
+      <rect x="60" y="580" width="440" height="36" rx="8" class="note-box"/><text x="74" y="603">Review → user edits / approves, picks pages</text>
+
+      <path d="M150,650 L488,650" class="msg" marker-end="url(#ah)"/><text x="160" y="644">POST /onboarding/attempts/{A}/confirm</text>
+      <text x="160" y="670" class="muted">+ acquisition_id, selected pages</text>
+      <path d="M490,700 L828,700" class="msg" marker-end="url(#ah)"/><text x="500" y="694">read the result once more</text>
+      <rect x="400" y="716" width="180" height="34" rx="8" class="box"/><text x="490" y="738" text-anchor="middle">app created</text>
+    </svg>
+  </div>
+
+  <h2 id="d1">5. D1 Remembering imports before the app exists</h2>
+  <p><strong>Current state.</strong> An attempt without an app has no server record: <code>get_attempt</code> returns 404 until confirm. The prompt, example, and preset draft stays in the browser. An app stores <code>onboarding_attempt_id</code> and enforces one app per user and attempt.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Option</th><th>What is stored</th><th>Advantages</th><th>Disadvantages</th></tr></thead>
+    <tbody>
+      <tr><td>(a) Browser draft only</td><td>Attempt ID, <code>discovery_id</code>, <code>acquisition_id</code>, <code>submission_id</code>, attestation</td><td>No migration. Same lifecycle as the existing draft.</td><td>Import resumes only in the same browser. If the browser is lost, the Atlas IDs are lost. The draft expires after 24 hours.</td></tr>
+      <tr><td>(b) New table <code>onboarding_link_imports</code></td><td>Same IDs, stored server-side, scoped to the owner</td><td>Works across devices. Could appear on the dashboard.</td><td>Migration. New lifecycle: expiry, cleanup, ownership. Not discussed with Jonathan.</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Proposal:</strong> option (a) for the website, on condition that the browser stores every Atlas ID in section 2. Option (b) is the same question as RFC #549 and should be decided there.</p>
+  <p><strong>Unverified:</strong> whether a lost browser can recover an Atlas result. The documented read path is by <code>acquisition_id</code>, and the result is kept for 30 days from capture. A lookup without the ID is not in the contract [INFERENCE].</p>
+
+  <h2 id="d5-now">6. D5 Current state of MI-1</h2>
+  <p>The backend design covers two cases: capacity full (resubmit the same <code>submission_id</code> after Atlas's <code>retry_after_seconds</code>) and expiry (silent re-check of a discovery, a 24-hour draft, a 30-day result).</p>
+  <p>In the MI-1 design, pages 2, 4, and 6 could not be read, and pages 8 to 22 have not been read. Pages 1, 3, 5, and 7 do not show screens for an empty site, capacity full, Atlas unavailable, a rejected token, or expired results. So it is not confirmed whether MI-1 defines them at all.</p>
+  <p>MI-1 already defines these screens: site refuses reads, site not found, robots.txt disallows, import failed (with "Try again" and "Continue without website").</p>
+
+  <h2 id="d5">7. D5 Messages, buttons, destinations per state</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>State</th><th>Type</th><th>Proposed screen</th><th>Buttons</th></tr></thead>
+    <tbody>
+      <tr><td>Empty page (<code>empty</code>)</td><td>Result, not an error</td><td>"No readable content on this site." on the Check screen</td><td>Try another URL; Continue without website</td></tr>
+      <tr><td>Capacity full (503 <code>capacity_exceeded</code>)</td><td>Waiting</td><td>Countdown from Atlas's <code>retry_after_seconds</code>, then automatic retry with the same ID. The 30-second value is Atlas's current setting, not hardcoded.</td><td>Continue without website</td></tr>
+      <tr><td>Atlas unavailable (503 <code>dependency_unavailable</code>)</td><td>Temporary error</td><td>"Website import is not available right now." Operator alert. The contract asks that work not be treated as failed, so the same ID can be retried automatically. Not decided.</td><td>Continue without website</td></tr>
+      <tr><td>Atlas rejects token</td><td>Configuration error</td><td>"Website import is not available." Operator alert. A user retry does not fix wrong credentials.</td><td>Continue without website</td></tr>
+      <tr><td>Check expired (409 <code>discovery_expired</code>)</td><td>Not shown</td><td>Arcane re-checks silently. Only a "Checking again…" indicator.</td><td>None</td></tr>
+      <tr><td>Result expired (410 <code>result_expired</code>, after 30 days)</td><td>Notice</td><td>"This import result is no longer available."</td><td>Import again from the link</td></tr>
+      <tr><td>Browser draft expired (24 hours)</td><td>Notice</td><td>Link page with a note "Your previous draft has expired." Not decided: whether the prompt is kept.</td><td>Start from a new link</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="d6">8. D6 Page and product limits</h2>
+  <p><strong>Facts.</strong></p>
+  <ul>
+    <li><strong>Website page and depth limits</strong> are set in the Atlas deployment, not in the contract. A CLI capture recorded 10 pages (atlas#18). A live capture of a demo site recorded 50 pages with <code>stopped_by: max_pages</code> (deployment runbook §9). The production limit is not confirmed.</li>
+    <li><strong>Capture duration</strong> (300 seconds in the CLI) is separate from the 15-minute operation deadline. They are not compared.</li>
+    <li><strong>Website contract:</strong> <code>website-acquisition-execution-v1</code> §3.1 allows the first HTTP binding to ignore a tighter limit from Arcane. So Arcane may not be able to request fewer pages. The deployed binding has not been checked.</li>
+    <li><strong>Marketplace:</strong> Atlas reads up to 2,000 products today. The ecommerce v1 contract has no caller limit field (arcane#549).</li>
+  </ul>
+  <p><strong>Proposal for marketplace:</strong> Atlas's limit stays fixed. Arcane enforces its own limit when the merchant picks products (step 5b on the canvas). Provisional limit: 2,000 products, 15 images per product (the Dewastore importer's limit).</p>
+  <p><strong>Open:</strong> whether Atlas adds a limit field (atlas#19 EA-5, atlas#22); the production page limit for websites; whether website and marketplace limits differ (arcane#549).</p>
+  <p><strong>Impact:</strong> wait time (Atlas accepts four concurrent acquisitions across callers, retry after 30 seconds) and image storage.</p>
+
+  <h2 id="d7">9. D7 Atlas credentials</h2>
+  <ul>
+    <li>The contract splits two capabilities, each with its own scope, Authentik app, and hostname:
+      <ul>
+        <li>Website: <code>website-acquisition-execution-v1</code>, scope <code>atlas:website-acquisition</code>, app <code>atlas-website-acquisition</code>.</li>
+        <li>Ecommerce: <code>ecommerce-acquisition-v1</code>, scope <code>atlas:ecommerce-acquisition</code>, app <code>atlas-ecommerce-acquisition</code>.</li>
+      </ul>
+    </li>
+    <li>Arcane stores the client ID and secret in its secret store. The Atlas registration command does not take the secret.</li>
+    <li>A client maps to an integration identity (<code>--integration arcane</code>, one per environment). During rotation, two registrations may map to the same integration.</li>
+    <li>Revocation blocks new calls, including reads, even when the token has not expired. Rotation does not reset the deduplication windows.</li>
+  </ul>
+  <p><strong>Proposal:</strong> two clients, following the scope and app split. One client with both scopes has not been checked in Authentik [INFERENCE].</p>
+  <p><strong>Open:</strong> whether a production credential is already registered. A runbook note mentions a "first live credential, #13"; this has not been verified.</p>
+  <p><strong>Status:</strong> needs discussion, tied to AT-1 and the Atlas operator.</p>
+
+  <h2 id="asks">10. Decisions needed from Jonathan</h2>
+  <ol>
+    <li>D1: accept option (a) for the website, with the browser storing all Atlas IDs?</li>
+    <li>D5: approve the proposed states table in section 7, and confirm the MI-1 pages that could not be read.</li>
+    <li>D5: should <code>dependency_unavailable</code> retry automatically?</li>
+    <li>D6: accept the marketplace proposal (Atlas limit fixed, Arcane enforces at selection, provisional 2,000 products and 15 images)?</li>
+    <li>D7: accept two clients?</li>
+    <li>RFC #549: open the RFC on pre-app catalogue storage, covering website D1 option (b) too?</li>
+  </ol>
+
+  <h2 id="unverified">11. Unverified items</h2>
+  <ul>
+    <li>Production page limit for websites. Not confirmed.</li>
+    <li>Whether the deployed website binding enforces Arcane's limit. Not checked.</li>
+    <li>Whether a lost browser can recover an Atlas result. Not verified against the contract.</li>
+    <li>MI-1 pages 2, 4, 6 (not readable) and 8 to 22 (not read).</li>
+    <li>Whether a production client credential is already registered.</li>
+    <li>Whether one client with both scopes works in Authentik. [INFERENCE]</li>
+  </ul>
+
+  <h2 id="waiting">12. What waits and what proceeds</h2>
+  <p>Waiting on RFC #549: the marketplace catalogue-retention item (MI-2) and website D1 option (b). Not waiting: the Atlas client, the screens, and D1 option (a) if it is accepted. Per the #525 guidance on RFCs, affected parts wait and other work may continue.</p>
+
+  <h2 id="decisions">13. Decision table</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Decision</th><th>Proposal</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>D1</td><td>How Arcane remembers an import before the app exists</td><td>(a) Browser draft stores all Atlas IDs. No migration. Lost browser means lost import.</td><td>Proposal. Not discussed with Jonathan.</td></tr>
+      <tr><td>D5</td><td>Messages, buttons, and destinations per state</td><td>Table in section 7</td><td>Needs design or decision. Some MI-1 pages not readable.</td></tr>
+      <tr><td>D6</td><td>Page and product limits</td><td>Arcane enforces its own limit at selection. Provisional 2,000 products and 15 images per product.</td><td>Needs discussion.</td></tr>
+      <tr><td>D7</td><td>Atlas credentials: one client or two</td><td>Two clients, one per capability, following the contract's scope and app split</td><td>Needs discussion. Tied to AT-1 and the Atlas operator.</td></tr>
+      <tr><td>RFC #549</td><td>Where the marketplace catalogue is kept before the app exists</td><td>Open RFC. Options in section 14.</td><td>Open question. RFC not filed.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 id="rfc549">14. RFC #549 Marketplace catalogue before the app exists</h2>
+
+  <h3>Use case</h3>
+  <p>A merchant who sells on Tokopedia or Shopee pastes a shop link. Atlas reads the catalogue, and the merchant reviews it. Arcane builds a shop from the selected products and guides the merchant into the FDE program. Acceptance in #549: merchants get into the FDE program.</p>
+
+  <h3>Problem</h3>
+  <p>Between Import and confirm, Arcane must hold a catalogue of up to 2,000 products, each with up to 15 images, and keep it through reloads, closed tabs, and lost responses. No app exists yet, so app-scoped storage (<code>apps.requirements</code>) is not available. The browser draft lives in one browser and expires after 24 hours. Its capacity for this data is not verified [INFERENCE]. The current design has no place for pre-app product rows.</p>
+
+  <h3>Current state</h3>
+  <ul>
+    <li>The attempt and draft are in browser localStorage, keyed <code>dewabuilder.onboarding.draft.&lt;attempt_id&gt;</code> (main at <code>3c01f7d2</code>). The server has no record for an attempt without an app.</li>
+    <li>Images are copied into user-owned assets before Review, with no stub app. Jonathan agreed this on 6 November. Assets outlive their origin app (ADR-067).</li>
+    <li>Products: Jonathan chose generated-app data files for the first release, with no product database. Every selected product is persisted, even when generation receives only a bounded sample.</li>
+    <li>The Atlas <code>context_id</code> is app-less and stable (agreed 6 November).</li>
+    <li><strong>Not yet specified:</strong> Arcane's owned mapping and persistence for the pre-app context, including reload and resume; where the complete pre-app catalogue is kept; how the selection becomes generated-app data files.</li>
+    <li>Dewastore's import worker stores products in its own database. This is a behavior reference, not a schema to copy. Dewastore is being retired.</li>
+  </ul>
+
+  <h3>Options</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Option</th><th>Description</th><th>Advantages</th><th>Disadvantages</th></tr></thead>
+    <tbody>
+      <tr><td>A. Browser draft holds the catalogue</td><td>No server storage</td><td>No migration</td><td>One browser, 24 hours. May not hold 2,000 products with metadata [INFERENCE]. Does not survive a lost browser.</td></tr>
+      <tr><td>B. Server-side pre-app import record</td><td>New owner-scoped table with a catalogue snapshot per attempt, with expiry and cleanup</td><td>Survives reload, lost response, and device change. Owner-scoped.</td><td>Migration. New lifecycle and cleanup. New pattern for pre-app data.</td></tr>
+      <tr><td>C. User-owned file referenced by attempt</td><td>Catalogue snapshot stored as a user-owned file, reusing asset storage</td><td>No new table</td><td>Not checked whether the assets model accepts a non-image file, or how unconfirmed attempts are cleaned up [INFERENCE].</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Decision needed</h3>
+  <p>No option is chosen here. Jonathan decides whether the RFC is opened and which option it examines. Evidence so far: option B adds a table, which means a database migration, and the repo's escalation rule requires a human decision before a migration. Option A has not been measured against 2,000 products with 15 images each across devices. Option C's cleanup is unverified. The same record could serve website D1 option (b), so one RFC would cover both.</p>
+
+  <h3>Questions for the RFC</h3>
+  <ol>
+    <li>Where is the pre-app catalogue kept, and for how long?</li>
+    <li>Who owns it, and how is access scoped (user and attempt)?</li>
+    <li>How do reload and lost-response retry resume?</li>
+    <li>How does the final selection become generated-app data files at confirm?</li>
+    <li>Does the website (D1 option b) use the same record?</li>
+  </ol>
+
+  <p><strong>Status:</strong> open. RFC not filed. The decision is Jonathan's. Not yet discussed.</p>
+
+</main>
+
+<script>
+  document.querySelectorAll('nav.toc a[href^="#"]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const target = document.getElementById(link.getAttribute('href').slice(1));
+      if (!target) return;
+      event.preventDefault();
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      target.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>
